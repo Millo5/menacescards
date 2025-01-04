@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Menaces Cards</title>
+</head>
+<body>
+    <div id="connectionPage">
+        <h1>Connect</h1>
+        <input id="message" type="text" placeholder="Enter ip..." />
+        <button id="connectButton" onclick="connect()">Connect</button>
+        <div id="errorMessage" style="color: red; display: none;">Failed to connect. Please check the IP address and try again.</div>
+    </div>
+
+
+    <script>
+        function connect() {
+            const messageInput = document.getElementById('message');
+            const message = messageInput.value;
+            const button = document.getElementById('connectButton');
+
+            if (message) {
+                button.disabled = true;
+
+                const ws = new WebSocket('ws://' + message + ':61660');
+                ws.onopen = () => {
+                    console.log('Connected');
+
+                    document.getElementById("connectionPage").remove();
+                };
+
+                ws.onerror = (event) => {
+                    console.error('Failed to connect', event);
+                    document.getElementById("errorMessage").style.display = "block";
+                    button.disabled = false;
+                };
+
+                ws.onclose = (event) => {
+                    if (event.wasClean) {
+                        console.log('Connection closed cleanly', event);
+                    } else {
+                        console.error('Connection died', event);
+                        document.getElementById("errorMessage").style.display = "block";
+                    }
+                    button.disabled = false;
+                };
+            }
+        }
+    </script>
+    
+</body>
+</html>
