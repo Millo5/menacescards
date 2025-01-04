@@ -1,34 +1,21 @@
-const express = require('express');
-const path = require('path');
-const { WebSocketServer, WebSocket } = require('ws');
-
-const app = express();
-const PORT = 61660;
-
-app.use(express.static(path.join(__dirname, '..', 'public')));
+const fs = require("fs");
+const path = require("path");
+const { GameServerManager } = require("./gameServerManager");
 
 
-const server = app.listen(PORT, () => {
-    console.log(`Server running on ${PORT}`);
+console.log("Loading packets");
+const packetDir = path.join(__dirname, "game", "net", "packets");
+const read = (dir) => fs.readdirSync(dir).reduce((files, file) => {
+    const name = path.join(dir, file);
+    const isDirectory = fs.statSync(name).isDirectory();
+    return isDirectory ? [...files, ...read(name)] : [...files, name];
+}, []);
+const files = read(packetDir);
+files.forEach(file => {
+    require(file);
 });
 
-const wss = new WebSocketServer({ server });
 
-
-wss.on('connection', (socket) => {
-    console.log('A client connected');
-
-    socket.on('message', (message) => {
-        console.log(`Received: ${message}`);
-
-        wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
-    });
-
-    socket.on('close', () => {
-        console.log('A client disconnected');
-    });
-});
+console.log("Starting server");
+const gameServer = new GameServerManager();
+gameServer.start();
